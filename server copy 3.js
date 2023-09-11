@@ -1,22 +1,19 @@
-// server/server.js
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(express.json());
 
 app.use(cors()); // Habilita o CORS para todas as rotas
+app.use(express.json()); // Habilita o uso de JSON no corpo da solicitação
+
 const accessToken = process.env.REACT_APP_API_TOKEN;
 
-
-
-
-app.post('/printful/stores', async (req, res) => {
+// Rota para receber os IDs dos produtos e buscar informações no Printful
+app.post('/printful/getProducts', async (req, res) => {
   try {
     const { productIds } = req.body;
-   /// console.log('ProductId no server', productIds);//-------------------------------------------log
     const productInfoArray = [];
 
     for (const productId of productIds) {
@@ -28,10 +25,12 @@ app.post('/printful/stores', async (req, res) => {
       productInfoArray.push(response.data);
     }
 
+    console.log('Informações dos produtos:', productInfoArray); // producInfoArray console...................log
+
     res.json(productInfoArray);
   } catch (error) {
-    console.error('Erro ao buscar informações de produtos:', error);
-    res.status(500).json({ error: 'Erro ao acessar o servidor Printful' });
+    console.error('Erro ao buscar informações de produtos no servidor Printful:', error);
+    res.status(500).json({ error: 'Erro ao buscar informações de produtos no servidor Printful' });
   }
 });
 
