@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors()); // Habilita o CORS para todas as rotas
-const accessToken = process.env.REACT_APP_API_TOKEN;
+const accessToken = process.env.REACT_APP_API_TOKEN_PRINTFUL;
 
 
 
