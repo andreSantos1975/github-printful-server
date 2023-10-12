@@ -16,7 +16,7 @@ const accessToken = process.env.REACT_APP_API_TOKEN_PRINTFUL;
 app.post('/printful/stores', async (req, res) => {
   try {
     const { productIds } = req.body;
-   /// console.log('ProductId no server', productIds);//-------------------------------------------log
+    console.log('ProductId no server', productIds);//-------------------------------------------log
     const productInfoArray = [];
 
     for (const productId of productIds) {
