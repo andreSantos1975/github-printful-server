@@ -61,35 +61,20 @@ app.post('/printful/stores', async (req, res) => {
 
 app.post('/checkout', async (req, res) => {
   try {
-    const { products, recipient } = req.body; // Adicione recipient aos parâmetros da solicitação
+    const { products } = req.body;
     // Obtenha os produtos do corpo da solicitação POST
-
-    // Construa um array de line_items que inclua os produtos e os campos do destinatário
-    const line_items = products.map(item => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: item.title,
-        },
-        unit_amount: item.price * 100, // O valor precisa ser em centavos
-      },
-      quantity: item.quantity,
-    }));
-
-    // Adicione os campos do destinatário à solicitação
-    line_items[0].recipient = {
-      name: recipient.name,
-      address1: recipient.address1,
-      city: recipient.city,
-      state_code: recipient.state_code,
-      country_code: recipient.country_code,
-      zip: recipient.zip,
-    };
-
-    // Crie a sessão de checkout com a linha de itens estendida
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items,
+      line_items: products.map(item => ({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: item.title,
+          },
+          unit_amount: item.price * 100, // O valor precisa ser em centavos
+        },
+        quantity: item.quantity,
+      })),
       mode: 'payment',
       success_url: process.env.CLIENT_URL + "?success=true",
       cancel_url: process.env.CLIENT_URL + "?success=false",
@@ -101,7 +86,6 @@ app.post('/checkout', async (req, res) => {
     res.status(500).json({ error: 'Erro ao criar sessão de checkout' });
   }
 });
-
 
 
 
