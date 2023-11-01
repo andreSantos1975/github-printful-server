@@ -192,3 +192,18 @@ a construir a confiança do cliente.
 Lembre-se de que a simplicidade e a usabilidade são essenciais. Quanto mais fácil você tornar o processo de preenchimento de 
 informações de envio, mais provável é que os usuários concluam o processo de compra sem problemas. É uma boa prática equilibrar 
 a coleta de informações necessárias para a compra com a minimização da fricção para o usuário.
+
+-----------------------------------------
+
+O erro que você está vendo não é realmente um erro, mas sim uma mensagem informativa do Git e do GitHub. A mensagem indica 
+que o Git está comprimindo objetos e resolvendo deltas ao fazer o push para o repositório remoto no GitHub. Em seguida, o 
+GitHub informa que encontrou uma vulnerabilidade no repositório que você está enviando.
+
+A parte importante desta mensagem é a referência à vulnerabilidade encontrada no seu repositório. Você deve verificar a 
+página de segurança do Dependabot para obter mais detalhes sobre a vulnerabilidade e como corrigi-la.
+
+Para resolver a vulnerabilidade, siga as etapas recomendadas na página de segurança do Dependabot. Isso geralmente envolve 
+atualizar as dependências afetadas para versões mais recentes que não contenham a vulnerabilidade.
+
+Portanto, o comportamento que você está vendo não é um erro, mas sim uma notificação importante sobre a segurança do seu 
+repositório no GitHub. Certifique-se de lidar com a vulnerabilidade conforme as instruções fornecidas na página de segurança.

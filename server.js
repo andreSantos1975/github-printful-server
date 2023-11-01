@@ -63,6 +63,13 @@ app.post('/checkout', async (req, res) => {
   try {
     const { products, recipient } = req.body; // Adicione recipient aos parâmetros da solicitação
     // Obtenha os produtos do corpo da solicitação POST
+    // Acesse os campos "address" e "city" diretamente
+    const address = recipient.address;
+    const city = recipient.city;
+
+     // Adicione logs para verificar os valores
+    // console.log('Address no server.js:', address);
+    // console.log('City  no server.js:', city);
 
     // Construa um array de line_items que inclua os produtos e os campos do destinatário
     const line_items = products.map(item => ({
@@ -78,13 +85,18 @@ app.post('/checkout', async (req, res) => {
 
     // Adicione os campos do destinatário à solicitação
     line_items[0].recipient = {
-      name: recipient.name,
-      address1: recipient.address1,
-      city: recipient.city,
-      state_code: recipient.state_code,
-      country_code: recipient.country_code,
-      zip: recipient.zip,
+      //name: recipient.name,
+      //address3: recipient.address1,
+      //city3: recipient.city,
+
+      
+     // state_code: recipient.state_code,
+     // country_code: recipient.country_code,
+     // zip: recipient.zip,
     };
+
+    console.log('Address no server.js:', address);
+    console.log('City  no server.js:', city);
 
     // Crie a sessão de checkout com a linha de itens estendida
     const session = await stripe.checkout.sessions.create({
