@@ -14,6 +14,7 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
 
+
 app.post('/webhooks/stripe', async (req, res) => {
   const event = req.body;
 
@@ -31,6 +32,9 @@ app.post('/webhooks/stripe', async (req, res) => {
 
   res.sendStatus(200); // Responda ao Stripe para confirmar o recebimento da webhook.
 });
+
+
+
 
 app.post('/printful/stores', async (req, res) => {
   try {
@@ -59,16 +63,14 @@ app.post('/checkout', async (req, res) => {
   try {
     const { products, recipient } = req.body; // Adicione recipient aos parâmetros da solicitação
     // Obtenha os produtos do corpo da solicitação POST
-
+    // Acesse os campos "address" e "city" diretamente
     const name = recipient.name;
     const address = recipient.address;
     const city = recipient.city;
-    const state_code = recipient.state_code;
-    const country_code = recipient.country_code;
-    const zip = recipient.zip;
+
 
     // Construa um array de line_items que inclua os produtos e os campos do destinatário
-
+    // Construa um array de line_items que inclua os produtos e os campos do destinatário
     const line_items = products.map(item => ({
       price_data: {
         currency: 'usd',
@@ -80,11 +82,28 @@ app.post('/checkout', async (req, res) => {
       quantity: item.quantity,
     }));
 
+    // Adicione o destinatário à solicitação de checkout
+    line_items.forEach(item => {
+      item.recipient = recipientData;
+    });
+
+    // Crie uma constante com os dados do destinatário
+    const recipientData = {
+      name: recipient.name,
+      address: recipient.address,
+      city: recipient.city,
+      state_code: recipient.state_code,
+      country_code: recipient.country_code,
+      zip: recipient.zip,
+    };
+
+    //console.log('name no server.js:', name);
     console.log('Address no server.js:', address);
     console.log('city no server.js:', city);
-    console.log('state_code  no server.js:', state_code);
-    console.log('country_code no server.js:', country_code);
-    console.log('zip  no server.js:', zip);
+    //console.log('state_code  no server.js:', state_code);
+    //console.log('country_code no server.js:', country_code);
+    //console.log('zip  no server.js:', zip);
+
 
     // Crie a sessão de checkout com a linha de itens estendida
     const session = await stripe.checkout.sessions.create({
@@ -101,6 +120,9 @@ app.post('/checkout', async (req, res) => {
     res.status(500).json({ error: 'Erro ao criar sessão de checkout' });
   }
 });
+
+
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
