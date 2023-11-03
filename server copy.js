@@ -8,16 +8,15 @@ const accessToken = process.env.REACT_APP_API_TOKEN_PRINTFUL;
 const accessTokenStripe = process.env.REACT_APP_API_TOKEN_STRIPE;
 const stripe = require('stripe')(accessTokenStripe);
 
-const app = express(); 
+const app = express();
 
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
 
-
 app.post('/webhooks/stripe', async (req, res) => {
   const event = req.body;
-  
+
   // Você deve validar a assinatura da webhook para garantir que as notificações são realmente do Stripe.
   // Normalmente, isso envolve verificar a assinatura usando sua chave secreta do Stripe.
 
@@ -32,9 +31,6 @@ app.post('/webhooks/stripe', async (req, res) => {
 
   res.sendStatus(200); // Responda ao Stripe para confirmar o recebimento da webhook.
 });
-
-
-
 
 app.post('/printful/stores', async (req, res) => {
   try {
@@ -63,15 +59,14 @@ app.post('/checkout', async (req, res) => {
   try {
     const { products, recipient } = req.body; // Adicione recipient aos parâmetros da solicitação
     // Obtenha os produtos do corpo da solicitação POST
-    // Acesse os campos "address" e "city" diretamente
+
+    const name = recipient.name;
     const address = recipient.address;
     const city = recipient.city;
+    const state_code = recipient.state_code;
+    const country_code = recipient.country_code;
+    const zip = recipient.zip;
 
-     // Adicione logs para verificar os valores
-    // console.log('Address no server.js:', address);
-    // console.log('City  no server.js:', city);
-
-    // Construa um array de line_items que inclua os produtos e os campos do destinatário
     const line_items = products.map(item => ({
       price_data: {
         currency: 'usd',
@@ -83,20 +78,12 @@ app.post('/checkout', async (req, res) => {
       quantity: item.quantity,
     }));
 
-    // Adicione os campos do destinatário à solicitação
-    line_items[0].recipient = {
-      //name: recipient.name,
-      //address3: recipient.address1,
-      //city3: recipient.city,
-
-      
-     // state_code: recipient.state_code,
-     // country_code: recipient.country_code,
-     // zip: recipient.zip,
-    };
-
+    console.log('name no server.js:', name);
     console.log('Address no server.js:', address);
-    console.log('City  no server.js:', city);
+    console.log('city no server.js:', city);
+    console.log('state_code  no server.js:', state_code);
+    console.log('country_code no server.js:', country_code);
+    console.log('zip  no server.js:', zip);
 
     // Crie a sessão de checkout com a linha de itens estendida
     const session = await stripe.checkout.sessions.create({
@@ -114,7 +101,37 @@ app.post('/checkout', async (req, res) => {
   }
 });
 
+app.post('/printful/order', async (req, res) => {
+  try {
+    const { recipient, items } = req.body; // Obtenha recipient e items do corpo da solicitação POST
 
+    // Crie o objeto de pedido com base nos campos fornecidos
+    const order = {
+      recipient: {
+        name: recipient.name,
+        address: recipient.address,
+        city: recipient.city,
+        state_code: recipient.state_code,
+        country_code: recipient.country_code,
+        zip: recipient.zip,
+      },
+      items: items,
+    };
+
+    // Realize a solicitação POST para o servidor da Printful
+    const response = await axios.post('https://api.printful.com/orders', order, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    // Responda com a resposta do servidor da Printful
+    res.json(response.data);
+  } catch (error) {
+    console.error('Erro ao fazer o pedido para a Printful:', error);
+    res.status(500).json({ error: 'Erro ao fazer o pedido para o servidor Printful' });
+  }
+});
 
 
 const PORT = process.env.PORT || 3001;

@@ -17,20 +17,71 @@ app.use(cors());
 app.post('/webhooks/stripe', async (req, res) => {
   const event = req.body;
 
+  console.log('Webhook Stripe recebida.');// ----------------------------------------------------------------log
+
   // Você deve validar a assinatura da webhook para garantir que as notificações são realmente do Stripe.
   // Normalmente, isso envolve verificar a assinatura usando sua chave secreta do Stripe.
 
   // Aqui você pode lidar com diferentes tipos de eventos, como pagamento bem-sucedido.
   if (event.type === 'checkout.session.completed') {
+    console.log('Início da criação do pedido no Printful.');//---------------------------------------------log
     const session = event.data.object;
     // Agora você sabe que o pagamento foi bem-sucedido. Você pode lidar com a criação do pedido no Printful ou outras ações necessárias.
-    console.log('Pagamento bem-sucedido:', session);
+
+    // A partir daqui, você pode chamar o endpoint /printful/order para criar o pedido no Printful.
+    // Suponha que você tenha os detalhes do pedido em 'session' ou em outro lugar.
+    
+    const recipient = {
+      name: 'Abadião',
+      address1: '13 address avenue, Bankstown',
+      city: 'Sydney',
+      state_code: 'NSW',
+      country_code: 'AU',
+      zip: '2200',
+    };
+
+    const items = [
+      {
+        "variant_id": 11513,
+        "quantity": 1,
+        "files": [
+          {
+            "url": "http://example.com/files/posters/poster_1.jpg"
+          }
+        ]
+      }
+    ];
+
+    console.log('Detalhes do destinatário:', recipient);//--------------------------------------------log
+    console.log('Itens do pedido:', items);//-----------------------------------------------------log
+
+    const printfulOrder = {
+      recipient: recipient,
+      items: items,
+    };
+
+    try {
+      const response = await axios.post('https://api.printful.com/orders', printfulOrder, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      console.log('Pedido criado no Printful:', response.data);
+    } catch (error) {
+      console.error('Erro ao criar pedido no Printful:', error);
+      // Lide com erros apropriadamente
+    }
+
+    console.log('Fim da criação do pedido no Printful.');//---------------------------------------------log
+    console.log('Pagamento bem-sucedido:', session);//----------------------------------------------------------log
   } else {
     console.log('Evento desconhecido:', event.type);
   }
 
+  console.log('Webhook Stripe processada.');//-----------------------------------------------------log
   res.sendStatus(200); // Responda ao Stripe para confirmar o recebimento da webhook.
 });
+
 
 app.post('/printful/stores', async (req, res) => {
   try {
@@ -67,8 +118,6 @@ app.post('/checkout', async (req, res) => {
     const country_code = recipient.country_code;
     const zip = recipient.zip;
 
-    // Construa um array de line_items que inclua os produtos e os campos do destinatário
-
     const line_items = products.map(item => ({
       price_data: {
         currency: 'usd',
@@ -80,6 +129,7 @@ app.post('/checkout', async (req, res) => {
       quantity: item.quantity,
     }));
 
+    console.log('name no server.js:', name);
     console.log('Address no server.js:', address);
     console.log('city no server.js:', city);
     console.log('state_code  no server.js:', state_code);
