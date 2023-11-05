@@ -26,31 +26,23 @@ app.post('/webhooks/stripe', async (req, res) => {
   if (event.type === 'checkout.session.completed') {
     console.log('Início da criação do pedido no Printful.');//---------------------------------------------log
     const session = event.data.object;
-    // Agora você sabe que o pagamento foi bem-sucedido. Você pode lidar com a criação do pedido no Printful ou outras ações necessárias.
-
-    // A partir daqui, você pode chamar o endpoint /printful/order para criar o pedido no Printful.
-    // Suponha que você tenha os detalhes do pedido em 'session' ou em outro lugar.
     
+    // A partir daqui, você pode chamar o endpoint /printful/order para criar o pedido no Printful.
+
     const recipient = {
-      name: 'Abadião',
-      address1: '13 address avenue, Bankstown',
-      city: 'Sydney',
-      state_code: 'NSW',
-      country_code: 'AU',
-      zip: '2200',
+      name: session.shipping.name,
+      address1: session.shipping.address.line1,
+      city: session.shipping.address.city,
+      state_code: session.shipping.address.state,
+      country_code: session.shipping.address.country,
+      zip: session.shipping.address.postal_code,
     };
 
-    const items = [
-      {
-        "variant_id": 11513,
-        "quantity": 1,
-        "files": [
-          {
-            "url": "http://example.com/files/posters/poster_1.jpg"
-          }
-        ]
-      }
-    ];
+    const items = session.display_items.map(item => ({
+      variant_id: item.custom.amount, // Use o valor desejado do seu objeto de produto
+      quantity: item.quantity,
+      // Você pode adicionar outras informações do item, como a URL da imagem, se necessário.
+    }));
 
     console.log('Detalhes do destinatário:', recipient);//--------------------------------------------log
     console.log('Itens do pedido:', items);//-----------------------------------------------------log
@@ -59,9 +51,6 @@ app.post('/webhooks/stripe', async (req, res) => {
       recipient: recipient,
       items: items,
     };
-
-    console.log('Conteúdo de printfulOrder:', printfulOrder); // ----------------------------------------log
-
 
     try {
       const response = await axios.post('https://api.printful.com/orders', printfulOrder, {
@@ -84,6 +73,7 @@ app.post('/webhooks/stripe', async (req, res) => {
   console.log('Webhook Stripe processada.');//-----------------------------------------------------log
   res.sendStatus(200); // Responda ao Stripe para confirmar o recebimento da webhook.
 });
+
 
 
 app.post('/printful/stores', async (req, res) => {

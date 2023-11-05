@@ -150,28 +150,77 @@ são necessárias.
 
 =====================================================================================================================================
 
-03/11/2023
-19:36
-O erro que você está enfrentando ao criar um pedido no Printful é:
+05/11/2023
+06:15
+Parece que você está tentando reutilizar uma variável recipient que foi inicializada anteriormente como temporaryRecipientData. 
+No entanto, é importante notar que, no segundo código que você forneceu, você declarou recipient novamente como uma variável local 
+no escopo da função, e ela substituiu a variável externa recipient que foi inicializada como temporaryRecipientData.
 
-csharp
+No segundo código, aqui está onde a nova variável recipient é declarada:
+
+javascript
 Copy code
-Erro ao criar pedido no Printful: AxiosError: Request failed with status code 400
-Além disso, o erro específico fornecido é:
+const recipient = temporaryRecipientData;
+Isso efetivamente substitui a variável recipient anterior e a define como temporaryRecipientData. Portanto, quando você cria o objeto 
+printfulOrder, ele usa a nova variável recipient, que é temporaryRecipientData, que é uma variável vazia:
 
-arduino
+javascript
 Copy code
-Recipient: Address line 1 cannot be blank.
-Esse erro indica que o campo "Address Line 1" (linha de endereço 1) no objeto recipient está em branco ou vazio. No seu código, 
-o objeto recipient é definido com um endereço fictício, mas parece que isso não está sendo transmitido corretamente na solicitação 
-ao Printful. Verifique o objeto recipient e certifique-se de que o endereço esteja corretamente definido com todos os campos 
-necessários, incluindo "address" (endereço), "city" (cidade), "state_code" (código do estado), "country_code" (código do país) 
-e "zip" (CEP).
+const printfulOrder = {
+  recipient: recipient,
+  items: items,
+};
+Isso pode explicar por que o segundo código não funciona, pois a variável recipient não contém os dados desejados.
 
-Você pode adicionar mais logs para ajudar a depurar o problema, como você já fez, mas, além disso, verifique se os dados no 
-objeto recipient estão sendo transmitidos corretamente na solicitação ao Printful. Certifique-se de que o endereço não esteja 
-vazio ou contenha espaços em branco. Certifique-se também de que você está usando os campos corretos para o endereço 
-(por exemplo, "line1" para a primeira linha do endereço) de acordo com a API do Printful.
+Para corrigir isso, você pode remover a declaração de recipient no início da função e usar temporaryRecipientData diretamente, 
+assim como no primeiro código. Certifique-se de que temporaryRecipientData contenha os dados corretos antes de fazer a solicitação 
+ao servidor Printful.
 
-Se o problema persistir, verifique a documentação da API do Printful ou entre em contato com o suporte do Printful para obter 
-assistência adicional na criação do pedido corretamente.
+Aqui está o trecho corrigido:
+
+javascript
+Copy code
+let temporaryRecipientData = null;
+
+app.post('/webhooks/stripe', async (req, res) => {
+  const event = req.body;
+
+  console.log('Webhook Stripe recebida.');
+  console.log('recipient recebida no endpoint webhooks/stripe.', temporaryRecipientData);
+
+  if (event.type === 'checkout.session.completed') {
+    console.log('Início da criação do pedido no Printful.');
+    const session = event.data.object;
+
+    // Resto do código...
+
+    const printfulOrder = {
+      recipient: temporaryRecipientData, // Use temporaryRecipientData aqui
+      items: items,
+    };
+
+    console.log('Conteúdo de printfulOrder:', printfulOrder);
+
+    try {
+      const response = await axios.post('https://api.printful.com/orders', printfulOrder, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      console.log('Pedido criado no Printful:', response.data);
+    } catch (error) {
+      console.error('Erro ao criar pedido no Printful:', error);
+      // Lide com erros apropriadamente
+    }
+
+    console.log('Fim da criação do pedido no Printful.');
+    console.log('Pagamento bem-sucedido:', session);
+  } else {
+    console.log('Evento desconhecido:', event.type);
+  }
+
+  console.log('Webhook Stripe processada.');
+  res.sendStatus(200); // Responda ao Stripe para confirmar o recebimento da webhook.
+});
+Certificando-se de que temporaryRecipientData seja definido corretamente antes de entrar neste trecho de código, ele será 
+usado para criar o objeto printfulOrder.
