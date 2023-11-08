@@ -14,30 +14,33 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(cors());
 
+let temporaryRecipientData = null;
+
 app.post('/webhooks/stripe', async (req, res) => {
   const event = req.body;
+  const recipient = temporaryRecipientData; // Mova a declaração da variável para o início
 
-  console.log('Webhook Stripe recebida.');// ----------------------------------------------------------------log
+  console.log('Webhook Stripe recebida.');//----------------------------------------------------------log
+  console.log('recipient recebida no endpoint webhooks/stripe.', recipient);//-----------------------------log
 
-  // Você deve validar a assinatura da webhook para garantir que as notificações são realmente do Stripe.
-  // Normalmente, isso envolve verificar a assinatura usando sua chave secreta do Stripe.
 
-  // Aqui você pode lidar com diferentes tipos de eventos, como pagamento bem-sucedido.
+
   if (event.type === 'checkout.session.completed') {
-    console.log('Início da criação do pedido no Printful.');//---------------------------------------------log
+    console.log('Início da criação do pedido no Printful.');
     const session = event.data.object;
-    // Agora você sabe que o pagamento foi bem-sucedido. Você pode lidar com a criação do pedido no Printful ou outras ações necessárias.
 
-    // A partir daqui, você pode chamar o endpoint /printful/order para criar o pedido no Printful.
-    // Suponha que você tenha os detalhes do pedido em 'session' ou em outro lugar.
+    console.log('recipient2 recebida2 no2 endpoint2 webhooks2/stripe2.', recipient);
     
-    const recipient = {
-      name: 'Abadião',
-      address1: '13 address avenue, Bankstown',
-      city: 'Sydney',
-      state_code: 'NSW',
-      country_code: 'AU',
-      zip: '2200',
+    // Resto do código...
+
+    /// Mova a declaração da variável para o início
+      recipientData = recipient  || {
+      name: '',
+      address1: '',
+      city: '',
+      state_code: '',
+      country_code: '',
+      zip: '',
     };
 
     const items = [
@@ -52,19 +55,15 @@ app.post('/webhooks/stripe', async (req, res) => {
       }
     ];
 
-    console.log('Detalhes do destinatário:', recipient);//--------------------------------------------log
-    console.log('Itens do pedido:', items);//-----------------------------------------------------log
-
     const printfulOrder = {
-      recipient: recipient,
+      recipient: recipientData,
       items: items,
     };
 
     console.log('Conteúdo de printfulOrder:', printfulOrder); // ----------------------------------------log
 
-
     try {
-      const response = await axios.post('https://api.printful.com/orders', printfulOrder, {
+      const response = await axios.post('https://api.printful.com/orders',  printfulOrder, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
@@ -89,7 +88,7 @@ app.post('/webhooks/stripe', async (req, res) => {
 app.post('/printful/stores', async (req, res) => {
   try {
     const { productIds } = req.body;
-    console.log('ProductId no server', productIds);
+    console.log('ProductId no server', productIds);//-------------------------------------------------------log
 
     const productInfoArray = [];
 
@@ -112,14 +111,11 @@ app.post('/printful/stores', async (req, res) => {
 app.post('/checkout', async (req, res) => {
   try {
     const { products, recipient } = req.body; // Adicione recipient aos parâmetros da solicitação
-    // Obtenha os produtos do corpo da solicitação POST
 
-    const name = recipient.name;
-    const address = recipient.address;
-    const city = recipient.city;
-    const state_code = recipient.state_code;
-    const country_code = recipient.country_code;
-    const zip = recipient.zip;
+    temporaryRecipientData = recipient; // Armazena o recipient globalmente
+
+
+    console.log('temporaryRecipientData no endpoint checkout', temporaryRecipientData);//-----------------------------------------log
 
     const line_items = products.map(item => ({
       price_data: {
@@ -132,12 +128,6 @@ app.post('/checkout', async (req, res) => {
       quantity: item.quantity,
     }));
 
-    console.log('name no server.js:', name);
-    console.log('Address no server.js:', address);
-    console.log('city no server.js:', city);
-    console.log('state_code  no server.js:', state_code);
-    console.log('country_code no server.js:', country_code);
-    console.log('zip  no server.js:', zip);
 
     // Crie a sessão de checkout com a linha de itens estendida
     const session = await stripe.checkout.sessions.create({

@@ -19,9 +19,11 @@ let temporaryRecipientData = null;
 app.post('/webhooks/stripe', async (req, res) => {
   const event = req.body;
   const recipient = temporaryRecipientData; // Mova a declaração da variável para o início
+  const products = temporaryProductstData; // Mova a declaração da variável para o início
 
   console.log('Webhook Stripe recebida.');//----------------------------------------------------------log
   console.log('recipient recebida no endpoint webhooks/stripe.', recipient);//-----------------------------log
+  console.log('products recebida no endpoint webhooks/stripe.', products);//-----------------------------log
 
 
 
@@ -88,7 +90,7 @@ app.post('/webhooks/stripe', async (req, res) => {
 app.post('/printful/stores', async (req, res) => {
   try {
     const { productIds } = req.body;
-    console.log('ProductId no server', productIds);
+    console.log('ProductId no server', productIds);//-------------------------------------------------------log
 
     const productInfoArray = [];
 
@@ -99,6 +101,7 @@ app.post('/printful/stores', async (req, res) => {
         }
       });
       productInfoArray.push(response.data);
+
     }
 
     res.json(productInfoArray);
@@ -114,8 +117,8 @@ app.post('/checkout', async (req, res) => {
 
     temporaryRecipientData = recipient; // Armazena o recipient globalmente
 
-
-    console.log('temporaryRecipientData no endpoint checkout', temporaryRecipientData);//-----------------------------------------log
+    temporaryProductstData = products; // Armazena o products globalmente
+  
 
     const line_items = products.map(item => ({
       price_data: {
