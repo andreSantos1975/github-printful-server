@@ -23,93 +23,85 @@ app.post('/webhooks/stripe', async (req, res) => {
   const recipient = temporaryRecipientData;
   const products = temporaryProductstData;
 
-  console.log('Webhook Stripe recebida.');//----------------------------------------------------------log
-  console.log('recipient recebida no endpoint webhooks/stripe.', recipient);//-----------------------------log
-  console.log('products recebida no endpoint webhooks/stripe.', products);//-----------------------------log
-
+  console.log('Webhook Stripe recebida.'); // ------------------------------------ log
+  console.log('recipient recebida no endpoint webhooks/stripe.', recipient); // --- log
+  console.log('products recebida no endpoint webhooks/stripe.', products); // --- log
 
   if (event.type === 'checkout.session.completed') {
     console.log('Início da criação do pedido no Printful.');
     const session = event.data.object;
-
-    // Extrair o ID do produto
     const productId = products[0].id;
 
-    console.log('ID do produto no endponit webhook/stripe:', productId);
-
-    // Token de autenticação OAuth
-    //const oauthToken = accessToken;
-
-    // Função assíncrona para fazer a solicitação POST
-    const makePostRequest = async () => {
-      try {
-        const response = await axios.get(`https://api.printful.com/store/products/${productId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        const syncProduct = response.data.result.sync_product;
-        const syncVariants = response.data.result.sync_variants;
-
-        console.log('sync_variants NO ENDPOINT WEBHOKK/STRIPE:', syncVariants); // Exibir o conteúdo de sync_variants
-
-        // Resto do código...
-      } catch (error) {
-        console.error('Erro ao obter o produto de sincronização:', error);
-      }
-    };
-
-    // Chame a função assíncrona
-    makePostRequest();
-
-    /// Mova a declaração da variável para o início
-    recipientData = recipient || {
-      name: '',
-      address1: '',
-      city: '',
-      state_code: '',
-      country_code: '',
-      zip: '',
-    };
-
-
-    const items = [
-      {
-        "variant_id": 11513,
-        "quantity": 1,
-        "files": [
-          {
-            "url": "http://example.com/files/posters/poster_1.jpg"
-          }
-        ]
-      }
-    ];
-    const printfulOrder = {
-      recipient: recipientData,
-      items: items,
-    };
-
-    console.log('Conteúdo de printfulOrder:', printfulOrder); // ----------------------------------------log
+    let syncVariants = [];
 
     try {
-      const response = await axios.post('https://api.printful.com/orders', printfulOrder, {
+      const response = await axios.get(`https://api.printful.com/store/products/${productId}`, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
-      console.log('Pedido criado no Printful:', response.data);
-    } catch (error) {
-      console.error('Erro ao criar pedido no Printful:', error);
-      // Lide com erros apropriadamente
-    }
+      const syncProduct = response.data.result.sync_product;
+      syncVariants = response.data.result.sync_variants;
 
-    console.log('Fim da criação do pedido no Printful.');//---------------------------------------------log
-    console.log('Pagamento bem-sucedido:', session);//----------------------------------------------------------log
+      console.log('sync_variants NO ENDPOINT WEBHOKK/STRIPE:', syncVariants); // Exibir o conteúdo de sync_variants
+      console.log('SUCCESS VARIANTS', syncVariants[0].variant_id); // ---------------- log
+      console.log('SUCCESS QUANTITY', products[0].quantity); // ------------------- log
+      console.log('SUCCESS URL IMAGEM', products[0].img); // --------------------- log
+
+      // Agora você pode usar syncVariants de forma dinâmica para construir os items
+      const items = syncVariants.map((variant) => ({
+        variant_id: variant.variant_id, // Acesse a propriedade variant_id diretamente de variant
+        quantity: products[0].quantity,
+        files: [
+          {
+            url: products[0].img,
+          },
+        ],
+      }));
+      
+
+      // Exemplo de como usar os items
+      console.log('Items:', items);
+
+      // Mova a declaração da variável recipientData para dentro do escopo correto
+      const recipientData = recipient || {
+        name: '',
+        address1: '',
+        city: '',
+        state_code: '',
+        country_code: '',
+        zip: '',
+      };
+
+      const printfulOrder = {
+        recipient: recipientData,
+        items: items,
+      };
+
+      console.log('Conteúdo de printfulOrder:', printfulOrder); // ----------------- log
+
+      try {
+        const response = await axios.post('https://api.printful.com/orders', printfulOrder, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+        console.log('Pedido criado no Printful:', response.data);
+      } catch (error) {
+        console.error('Erro ao criar pedido no Printful:', error);
+        // Lide com erros apropriadamente
+      }
+
+      console.log('Fim da criação do pedido no Printful.'); // ---------------------- log
+      console.log('Pagamento bem-sucedido:', session); // ------------------------- log
+    } catch (error) {
+      console.error('Erro ao obter o produto de sincronização:', error);
+    }
   } else {
     console.log('Evento desconhecido:', event.type);
   }
 
-  console.log('Webhook Stripe processada.');//-----------------------------------------------------log
+  console.log('Webhook Stripe processada.'); // ----------------------------- log
   res.sendStatus(200); // Responda ao Stripe para confirmar o recebimento da webhook.
 });
 
