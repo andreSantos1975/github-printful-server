@@ -58,7 +58,7 @@ app.post('/webhooks/stripe', async (req, res) => {
           },
         ],
       }));
-      
+
 
       // Exemplo de como usar os items
       console.log('Items:', items);
@@ -129,6 +129,25 @@ app.post('/printful/stores', async (req, res) => {
     res.status(500).json({ error: 'Erro ao acessar o servidor Printful' });
   }
 });
+
+app.get('/printful/allProducts', async (req, res) => {
+  try {
+    // Fazer a chamada para a API da Printful para obter todos os produtos
+    const response = await axios.get('https://api.printful.com/store/products', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const allProducts = response.data;
+    res.json(allProducts);
+  } catch (error) {
+    console.error('Erro ao buscar informações de todos os produtos:', error);
+    res.status(500).json({ error: 'Erro ao acessar o servidor Printful' });
+  }
+});
+
+
 
 app.post('/checkout', async (req, res) => {
   try {
