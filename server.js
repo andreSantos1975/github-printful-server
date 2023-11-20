@@ -35,7 +35,7 @@ app.post('/webhooks/stripe', async (req, res) => {
     let syncVariants = [];
 
     try {
-      const response = await axios.get(`https://api.printful.com/store/products/${productId}`, {
+      const response = await axios.get(`https://api.printful.com/store/products/${product}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -113,8 +113,8 @@ app.post('/printful/stores', async (req, res) => {
 
     const productInfoArray = [];
 
-    for (const productId of productIds) {
-      const response = await axios.get(`https://api.printful.com/store/products/${productId}`, {
+    for (const product of productId) {
+      const response = await axios.get(`https://api.printful.com/store/products/${product}`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
